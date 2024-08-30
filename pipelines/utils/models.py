@@ -86,6 +86,7 @@ def kfold_lightgbm(df, num_folds, stratified = False, debug= False):
         gc.collect()
 
     print('Full AUC score %.6f' % roc_auc_score(train_df['TARGET'], oof_preds))
+    
     # Write submission file and plot feature importance
     if not debug:
         test_df['TARGET'] = sub_preds

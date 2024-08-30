@@ -31,4 +31,4 @@ def display_importances(feature_importance_df_):
     sns.barplot(x="importance", y="feature", data=best_features.sort_values(by="importance", ascending=False))
     plt.title('LightGBM Features (avg over folds)')
     plt.tight_layout()
-    plt.savefig('lgbm_importances01.png')
+    plt.savefig('../data/08_reporting/lgbm_importances01.png')

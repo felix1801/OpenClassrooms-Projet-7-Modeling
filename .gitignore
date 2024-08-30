@@ -1,1 +1,2 @@
-data/**/*.csv
+# ignore all the files, no matter the .extension, inside the folders inside of the data folder
+data/**/*

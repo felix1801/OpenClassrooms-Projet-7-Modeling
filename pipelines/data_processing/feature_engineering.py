@@ -10,7 +10,7 @@ def create_final_df(df: pd.DataFrame, bureau: pd.DataFrame, prev: pd.DataFrame, 
     df = df.join(ins, how='left', on='SK_ID_CURR')
     df = df.join(cc, how='left', on='SK_ID_CURR')
     
-    return df
+    return df.astype('float16')
 
 def application_train_test(num_rows=None, nan_as_category=False) -> pd.DataFrame:
     application_train = pd.read_csv('../data/01_raw/application_train.csv', nrows= num_rows)
@@ -40,7 +40,7 @@ def application_train_test(num_rows=None, nan_as_category=False) -> pd.DataFrame
     df['ANNUITY_INCOME_PERC'] = df['AMT_ANNUITY'] / df['AMT_INCOME_TOTAL']
     df['PAYMENT_RATE'] = df['AMT_ANNUITY'] / df['AMT_CREDIT']
 
-    df = df.astype('float32')
+    df = df.astype('float16')
 
     del application_test
     gc.collect()

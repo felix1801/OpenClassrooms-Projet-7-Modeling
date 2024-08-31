@@ -9,6 +9,7 @@ def create_final_df(df: pd.DataFrame, bureau: pd.DataFrame, prev: pd.DataFrame, 
     df = df.join(pos, how='left', on='SK_ID_CURR')
     df = df.join(ins, how='left', on='SK_ID_CURR')
     df = df.join(cc, how='left', on='SK_ID_CURR')
+    
     return df
 
 def application_train_test(num_rows=None, nan_as_category=False) -> pd.DataFrame:
@@ -38,6 +39,9 @@ def application_train_test(num_rows=None, nan_as_category=False) -> pd.DataFrame
     df['INCOME_PER_PERSON'] = df['AMT_INCOME_TOTAL'] / df['CNT_FAM_MEMBERS']
     df['ANNUITY_INCOME_PERC'] = df['AMT_ANNUITY'] / df['AMT_INCOME_TOTAL']
     df['PAYMENT_RATE'] = df['AMT_ANNUITY'] / df['AMT_CREDIT']
+
+    df = df.astype('float32')
+
     del application_test
     gc.collect()
     return df

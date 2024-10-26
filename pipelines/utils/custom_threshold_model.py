@@ -11,9 +11,7 @@ class CustomThresholdModel(BaseEstimator, ClassifierMixin):
 
     def predict(self, X):
         probas = self.model.predict_proba(X)[:, 1]
-        print(probas)
         scores = self.predict_score(X, probas)
-        print(scores)
         return scores, probas
     
     def predict_score(self, X, probas):

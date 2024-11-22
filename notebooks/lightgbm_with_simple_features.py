@@ -309,27 +309,23 @@ def kfold_lightgbm(df, num_folds, stratified = False, debug= False):
     print("Starting LightGBM. Train shape: {}, test shape: {}".format(train_df.shape, test_df.shape))
     del df
     gc.collect()
+    
     # Cross validation model
     if stratified:
         folds = StratifiedKFold(n_splits= num_folds, shuffle=True, random_state=1001)
     else:
         folds = KFold(n_splits= num_folds, shuffle=True, random_state=1001)
+    
     # Create arrays and dataframes to store results
     oof_preds = np.zeros(train_df.shape[0])
     sub_preds = np.zeros(test_df.shape[0])
     feature_importance_df = pd.DataFrame()
     feats = [f for f in train_df.columns if f not in ['TARGET','SK_ID_CURR','SK_ID_BUREAU','SK_ID_PREV','index']]
     
-    problem_columns = []
-    inconsistent_columns = []
-    full_nan_columns = []
-    problem_unique_columns = []
-
     for n_fold, (train_idx, valid_idx) in enumerate(folds.split(train_df[feats], train_df['TARGET'])):
         train_x, train_y = train_df[feats].iloc[train_idx], train_df['TARGET'].iloc[train_idx]
         valid_x, valid_y = train_df[feats].iloc[valid_idx], train_df['TARGET'].iloc[valid_idx]
 
-        cols_pb = {}
 
         # Convert relevant columns to the correct data type
         for col in train_x.columns:
@@ -354,6 +350,7 @@ def kfold_lightgbm(df, num_folds, stratified = False, debug= False):
                 train_x[col] = train_x[col].fillna(0).astype(float)
                 valid_x[col] = valid_x[col].fillna(0).astype(float)
                 test_df.loc[:, col] = test_df[col].fillna(0).astype(float)
+                
 
         # Diagnose the types of the columns after conversion
         columns_to_remove = []
@@ -465,7 +462,7 @@ def display_importances(feature_importance_df_):
     sns.barplot(x="importance", y="feature", data=best_features.sort_values(by="importance", ascending=False))
     plt.title('LightGBM Features (avg over folds)')
     plt.tight_layout()
-    plt.savefig('lgbm_importances01.png')
+    plt.savefig('C:/Users/Z478SG/Desktop/Ecole/OpenClassrooms-Projet-7/modeling/data/08_reporting/lgbm_importances01.png')
 
 
 def main(debug = False):

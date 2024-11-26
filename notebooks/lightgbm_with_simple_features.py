@@ -416,7 +416,7 @@ def kfold_lightgbm(df, num_folds, stratified = False, debug= False):
             eval_metric= 'auc',
             callbacks=[
                 lightgbm.early_stopping(
-                    stopping_rounds=1,
+                    stopping_rounds=200,
                     first_metric_only=True,  # Only use AUC metric for early stopping
                     verbose=True,
                     min_delta=0.01  # Minimum improvement needed to continue training

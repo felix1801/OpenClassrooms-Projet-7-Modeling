@@ -295,13 +295,44 @@ def credit_card_balance(num_rows = None, nan_as_category = True):
     cc_agg.to_csv(filepath, index=False)
     return cc_agg
 
+# Fonction pour convertir les colonnes objet avec 1 à 2 valeurs uniques en booléen ou int
+def convert_object_columns(df):
+    obj_cols = df.select_dtypes(include=['object']).columns
+    for col in obj_cols:
+        # Remplacer les NaN par la valeur la plus représentée
+        most_frequent_value = df[col].mode()[0]
+        df[col] = df[col].fillna(most_frequent_value)
+
+        unique_values = df[col].nunique()
+        if unique_values == 1:
+            df[col] = df[col].astype('bool')
+        elif unique_values == 2:
+            df[col] = df[col].astype('category').cat.codes.astype('int8')
+    return df
+
+def handle_data_types(df):
+    df.columns = [re.sub('[^A-Za-z0-9_]+', '', col) for col in df.columns]
+    
+    # Convertir les colonnes objet avec 1 à 2 valeurs uniques en booléen ou int
+    df = convert_object_columns(df)
+
+    inf_cols_mask = np.isinf(df).any()
+    inf_cols = df.columns.to_series()[inf_cols_mask].tolist()
+    # Replace inf values with max
+    for col in inf_cols:
+        if col in df.columns:  # Check if the column exists in the DataFrame
+            max_value = df[col][df[col] != np.inf].max()  # Get the max value excluding inf
+            df[col] = df[col].replace([np.inf, -np.inf], max_value)  # Replace inf values
+
+    return df
+
 # LightGBM GBDT with KFold or Stratified KFold
 # Parameters from Tilii kernel: https://www.kaggle.com/tilii7/olivier-lightgbm-parameters-by-bayesian-opt/code
 def kfold_lightgbm(df, num_folds, stratified = False, debug= False):
     auc_max = 0
 
     # Remove special characters from feature names
-    df.columns = [re.sub('[^A-Za-z0-9_]+', '', col) for col in df.columns]
+    # df.columns = [re.sub('[^A-Za-z0-9_]+', '', col) for col in df.columns]
 
     # Divide in training/validation and test data
     train_df = df[df['TARGET'].notnull()]
@@ -328,47 +359,47 @@ def kfold_lightgbm(df, num_folds, stratified = False, debug= False):
 
 
         # Convert relevant columns to the correct data type
-        for col in train_x.columns:
-            if train_x[col].dtype == 'object':
-                # Convert to numeric and handle exceptions
-                try:
-                    train_x[col] = pd.to_numeric(train_x[col], errors='raise')
-                except ValueError as e:
-                    train_x[col] = train_x[col].astype(str).str.strip().astype(float)
+        # for col in train_x.columns:
+        #     if train_x[col].dtype == 'object':
+        #         # Convert to numeric and handle exceptions
+        #         try:
+        #             train_x[col] = pd.to_numeric(train_x[col], errors='raise')
+        #         except ValueError as e:
+        #             train_x[col] = train_x[col].astype(str).str.strip().astype(float)
 
-                try:
-                    valid_x[col] = pd.to_numeric(valid_x[col], errors='raise')
-                except ValueError as e:
-                    valid_x[col] = valid_x[col].astype(str).str.strip().astype(float)
+        #         try:
+        #             valid_x[col] = pd.to_numeric(valid_x[col], errors='raise')
+        #         except ValueError as e:
+        #             valid_x[col] = valid_x[col].astype(str).str.strip().astype(float)
 
-                try:
-                    test_df.loc[:, col] = pd.to_numeric(test_df[col], errors='raise')
-                except ValueError as e:
-                    test_df.loc[:, col] = test_df[col].astype(str).str.strip().astype(float)
+        #         try:
+        #             test_df.loc[:, col] = pd.to_numeric(test_df[col], errors='raise')
+        #         except ValueError as e:
+        #             test_df.loc[:, col] = test_df[col].astype(str).str.strip().astype(float)
 
-                # Fill NaN values and convert to float
-                train_x[col] = train_x[col].fillna(0).astype(float)
-                valid_x[col] = valid_x[col].fillna(0).astype(float)
-                test_df.loc[:, col] = test_df[col].fillna(0).astype(float)
+        #         # Fill NaN values and convert to float
+        #         train_x[col] = train_x[col].fillna(0).astype(float)
+        #         valid_x[col] = valid_x[col].fillna(0).astype(float)
+        #         test_df.loc[:, col] = test_df[col].fillna(0).astype(float)
                 
 
         # Diagnose the types of the columns after conversion
-        columns_to_remove = []
-        for col in train_x.columns:
-            train_type = train_x[col].dtype
-            valid_type = valid_x[col].dtype
-            test_type = test_df[col].dtype
+        # columns_to_remove = []
+        # for col in train_x.columns:
+        #     train_type = train_x[col].dtype
+        #     valid_type = valid_x[col].dtype
+        #     test_type = test_df[col].dtype
 
-            if train_type == 'object' or valid_type == 'object' or test_type == 'object':
-                print(f"Column {col} has inconsistent types and will be removed.")
-                columns_to_remove.append(col)
+        #     if train_type == 'object' or valid_type == 'object' or test_type == 'object':
+        #         print(f"Column {col} has inconsistent types and will be removed.")
+        #         columns_to_remove.append(col)
 
-        # Remove columns with inconsistent types from all DataFrames
-        train_df.drop(columns=columns_to_remove, inplace=True)
-        valid_x.drop(columns=columns_to_remove, inplace=True)
-        test_df.drop(columns=columns_to_remove, inplace=True)
+        # # Remove columns with inconsistent types from all DataFrames
+        # train_df.drop(columns=columns_to_remove, inplace=True)
+        # valid_x.drop(columns=columns_to_remove, inplace=True)
+        # test_df.drop(columns=columns_to_remove, inplace=True)
 
-        print(f"Columns removed: {columns_to_remove}")
+        # print(f"Columns removed: {columns_to_remove}")
 
         # {
         #     'CC_NAME_CONTRACT_STATUS_Active_MIN': dtype('O'), 
@@ -390,10 +421,10 @@ def kfold_lightgbm(df, num_folds, stratified = False, debug= False):
         #     }
 
         # Ensure that train_x, valid_x, and test_df have the same columns
-        common_columns = train_x.columns.intersection(valid_x.columns).intersection(test_df.columns)
-        train_x = train_x[common_columns]
-        valid_x = valid_x[common_columns]
-        test_df = test_df[common_columns]
+        # common_columns = train_x.columns.intersection(valid_x.columns).intersection(test_df.columns)
+        # train_x = train_x[common_columns]
+        # valid_x = valid_x[common_columns]
+        # test_df = test_df[common_columns]
                 
         # LightGBM parameters found by Bayesian optimization
         clf = lightgbm.LGBMClassifier(
@@ -504,6 +535,9 @@ def main(debug = False):
             df = df.join(cc, how='left', on='SK_ID_CURR')
             del cc
             gc.collect()
+
+        with timer("Process data types handling"):
+            df = handle_data_types(df)
 
         df.to_csv(filepath, index=False)
 

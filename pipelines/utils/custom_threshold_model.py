@@ -7,6 +7,7 @@ class CustomThresholdModel(BaseEstimator, ClassifierMixin):
 
     def fit(self, X, y):
         # Pas besoin de ré-entraîner le modèle
+        self.model.fit(X, y)
         return self
 
     def predict(self, X):

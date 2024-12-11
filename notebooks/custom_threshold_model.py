@@ -1,3 +1,4 @@
+import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
 
 class CustomThresholdModel(BaseEstimator, ClassifierMixin):
@@ -13,7 +14,8 @@ class CustomThresholdModel(BaseEstimator, ClassifierMixin):
     def predict(self, X):
         probas = self.model.predict_proba(X)[:, 1]
         scores = self.predict_score(X, probas)
-        return scores, probas, self.threshold
+        thresholds = np.full(len(X), self.threshold)
+        return scores, probas, thresholds
     
     def predict_score(self, X, probas):
         return (probas >= self.threshold).astype(int)

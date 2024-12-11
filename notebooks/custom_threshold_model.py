@@ -13,7 +13,7 @@ class CustomThresholdModel(BaseEstimator, ClassifierMixin):
     def predict(self, X):
         probas = self.model.predict_proba(X)[:, 1]
         scores = self.predict_score(X, probas)
-        return scores, probas
+        return scores, probas, self.threshold
     
     def predict_score(self, X, probas):
         return (probas >= self.threshold).astype(int)
